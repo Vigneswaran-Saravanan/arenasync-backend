@@ -1,41 +1,15 @@
-import { Router } from 'express';
-import { body } from 'express-validator';
-import { register, login } from '../controllers/authController.js';
+// Import Router
+import {Router} from 'express'
 
-const router = Router();
+// Import the resgiter and login functions
+import {register, login} from "../controllers/authController.js"
 
-// REGISTER VALIDATION RULES 
+const router = Router ()
 
-const registerValidation = [
-  body('name')
-    .notEmpty()
-    .withMessage('Name is required'),
-
-  body('email')
-    .isEmail()
-    .withMessage('Please enter a valid email'),
-
-  body('password')
-    .isLength({ min: 6 })
-    .withMessage('Password must be at least 6 characters'),
-];
-
-// LOGIN VALIDATION RULES
-const loginValidation = [
-  body('email')
-    .isEmail()
-    .withMessage('Please enter a valid email'),
-
-  body('password')
-    .notEmpty()
-    .withMessage('Password is required'),
-];
-
-// ROUTES
 // POST /api/auth/register
-router.post('/register', registerValidation, register);
+router.post('/register', register)
 
 // POST /api/auth/login
-router.post('/login', loginValidation, login);
+router.post('/login', login)
 
-export default router;
+export default router
