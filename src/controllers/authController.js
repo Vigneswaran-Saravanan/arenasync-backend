@@ -64,8 +64,9 @@ res.status(201).json({
     id: user._id,
     name: user.name,
     email: user.email,
-    role: user.city,
-    city: user.position,
+    role: user.role,
+    city: user.city,
+    position: user.position,
     skillLevel: user.skillLevel
 
   }
