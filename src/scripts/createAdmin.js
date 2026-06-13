@@ -1,56 +1,52 @@
-// Creates the admin account directly in MongoDB
-// Run with: npm run create-admin
+import dotenv from 'dotenv'
+import mongoose from 'mongoose'
+import bcrypt from 'bcryptjs'
+import User from '../models/User.js'
 
-import dotenv from 'dotenv';
-import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
-import User from '../models/User.js';
 
-dotenv.config();
+dotenv.config()
 
-const createAdmin = async () => {
+async function createAdmin() {
+
   try {
+    // Connect to MongoDB
+    await mongoose.connect(process.env.MONGO_URI)
+    console.log('MongoDB connected')
 
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log('MongoDB Connected...');
-
-    const existingAdmin = await User.findOne({
-      email: process.env.ADMIN_EMAIL
-    });
+    // Check if admin already exists
+    const existingAdmin = await User.findOne({ 
+      email: process.env.ADMIN_EMAIL 
+    })
 
     if (existingAdmin) {
-      console.log('Admin already exists — no action taken.');
-      process.exit(0);
+      console.log('Admin account already exists:', process.env.ADMIN_EMAIL)
+      process.exit(0)
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(
-      process.env.ADMIN_PASSWORD,
-      salt
-    );
+    // Hash the admin password from .env
+    const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10)
 
-    // Create admin — role is hardcoded here, never from a form
+    // Create the admin user
     const admin = await User.create({
-      name: process.env.ADMIN_NAME,
+      name: 'ArenaSync Admin',
       email: process.env.ADMIN_EMAIL,
       password: hashedPassword,
-      role: 'admin',
-      status: 'active',
-    });
+      role: 'Admin',
+      status: 'Active'
+    })
 
-    console.log('Admin created successfully!');
-    console.log(`Name:  ${admin.name}`);
-    console.log(`Email: ${admin.email}`);
-    console.log(`Role:  ${admin.role}`);
-    console.log('You can now log in at http://localhost:3000/login');
+    console.log('Admin account created successfully!')
+    console.log('Email:', admin.email)
+    console.log('Role:', admin.role)
+    console.log('You can now login at /login with your admin credentials')
 
-    // Close connection and exit cleanly
-    process.exit(0);
+    process.exit(0)
 
   } catch (error) {
-    console.error('Error creating admin:', error.message);
-    process.exit(1);
+    console.log('Error creating admin:', error.message)
+    process.exit(1)
   }
-};
+}
 
-createAdmin();
+// Run the function
+createAdmin()
