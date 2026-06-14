@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './src/config/db.js';
 import authRoutes from './src/routes/authRoutes.js';
+import matchRoutes from './src/routes/matchRoutes.js'
 
 // Load environment variables from .env file
 dotenv.config();
@@ -24,6 +25,7 @@ app.use(cors({
 // Routes — all auth routes start with /api/auth
 // So signup will be at /api/auth/register and login /api/auth/login
 app.use('/api/auth', authRoutes)
+app.use('/api/matches', matchRoutes)
 
 // A simple test route — visit http://localhost:5000 in browser
 app.get('/', (req, res) => {
