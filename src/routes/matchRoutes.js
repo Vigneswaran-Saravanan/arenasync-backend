@@ -4,7 +4,10 @@ import {
   getMatchById,
   createMatch,
   updateMatch,
-  deleteMatch
+  deleteMatch,
+  joinMatch,
+  confirmPlayer,
+  leaveMatch
 } from '../controllers/matchController.js'
 import { protect, requireRole } from '../middleware/authmiddleware.js'
 
@@ -24,5 +27,14 @@ router.put('/:id', protect, requireRole('Organizer'), updateMatch)
 
 // DELETE /api/matches/:id — delete match 
 router.delete('/:id', protect, deleteMatch)
+
+// POST /api/matches/:id/join — player joins match 
+router.post('/:id/join', protect, requireRole('Player'), joinMatch)
+
+// PUT /api/matches/:id/players/:userId — organizer confirms or declines player
+router.put('/:id/players/:userId', protect, requireRole('Organizer'), confirmPlayer)
+
+// DELETE /api/matches/:id/leave — player leaves match
+router.delete('/:id/leave', protect, requireRole('Player'), leaveMatch)
 
 export default router
