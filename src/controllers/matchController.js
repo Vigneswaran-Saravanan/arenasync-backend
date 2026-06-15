@@ -11,7 +11,7 @@ export async function getMatches(req, res) {
     const matches = await Match.find({ status: 'Upcoming' })
       .populate('organizer', 'name email')
       .sort({ date: 1 })
-  
+
 
     res.status(200).json({
       message: 'Matches fetched successfully',
@@ -59,7 +59,7 @@ export async function getMatchById(req, res) {
 export async function createMatch(req, res) {
   try {
 
-    
+
     const {
       title,
       venue,
@@ -202,5 +202,141 @@ export async function deleteMatch(req, res) {
     res.status(500).json({
       message: 'Server error: ' + error.message
     })
+  }
+}
+
+// Join Match
+// POST /api/matches/:id/join
+
+export async function joinMatch(req, res) {
+  try {
+    const match = await Match.findById(req.params.id)
+
+    if (!match) {
+      return res.status(404).json({ message: 'Match not found' })
+    }
+
+    // Check if match is still open
+    if (match.status !== 'Upcoming') {
+      return res.status(400).json({ message: 'This match is no longer accepting requests' })
+    }
+
+    // Check if the player already requested or confirmed
+    const alreadyJoined = match.players.find(function (p) {
+      return p.user.toString() === req.user._id.toString()
+    })
+
+    if (alreadyJoined) {
+      return res.status(400).json({ message: ' You have already requested to join this match' })
+    }
+
+    // Check if the match if full
+    const confirmedCount = match.players.filter(function (p) {
+      return p.status === 'confirmed'
+    }).length
+
+    if (confirmedCount >= match.maxPlayers) {
+      return res.status(400).json({ message: 'This match is full' })
+    }
+
+    // Add players with pending status
+    match.players.push({
+      user: req.user._id,
+      status: 'pending'
+    })
+
+    await match.save()
+
+    res.status(200).json({
+      message: 'Join request sent successfully',
+      status: 'pending'
+    })
+
+  } catch (error) {
+    res.status(500).json({ message: 'Server error: ' + error.message })
+  }
+}
+
+// Confirm player
+// PUT /api/matches/:id/players/:userId
+
+export async function confirmPlayer(req, res) {
+
+  try {
+
+    const match = await Match.findById(req.params.id)
+
+    if (!match) {
+      return res.status(404).json({ message: 'Match not found' })
+    }
+
+    // Check if logged in user is the organizer
+    if (match.organizer.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Only the organizer can accept or decline players' })
+    }
+
+    // Find the player in the players array
+    const playerEntry = match.players.find(function (p) {
+      return p.user.toString() === req.params.userId
+    })
+
+    if (!playerEntry) {
+      return res.status(404).json({ message: 'Player not found in this match' })
+    }
+
+    // action should be 'confirmed' or 'declined'
+    const { action } = req.body
+
+    if (!action || !['confirmed', 'declined'].includes(action)) {
+      return res.status(400).json({ message: 'Action must be confirmed or declined' })
+    }
+
+    // Update the player status
+    playerEntry.status = action
+
+    await match.save()
+
+    res.status(200).json({
+      message: 'Player ' + action + ' successfully',
+      status: action
+    })
+
+  } catch (error) {
+    res.status(500).json({ message: 'Server error: ' + error.message })
+  }
+}
+
+// Leave match
+// DELETE /api/matches/:id/leave
+
+export async function leaveMatch(req, res) {
+  try {
+
+    const match = await Match.findById(req.params.id)
+
+    if (!match) {
+      return res.status(404).json({ message: 'Match not found' })
+    }
+
+    // Check if player is in this match
+    const playerIndex = match.players.findIndex(function(p) {
+      return p.user.toString() === req.user._id.toString()
+    })
+
+    if (playerIndex === -1) {
+      return res.status(400).json({ message: 'You are not in this match' })
+    }
+
+    // Remove the player from the array
+    match.players.splice(playerIndex, 1)
+
+    await match.save()
+
+    res.status(200).json({
+      message: 'You have left the match successfully'
+    })
+
+  } catch (error) {
+    res.status(500).json({ message: 'Server error: ' + error.message })
   }
 }
