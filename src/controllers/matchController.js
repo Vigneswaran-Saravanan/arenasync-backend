@@ -1,4 +1,5 @@
 import Match from '../models/Match.js'
+// Tested: join, confirm player and leave match all working
 
 // GET All Matches
 // GET /api/matches
