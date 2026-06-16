@@ -341,3 +341,26 @@ export async function leaveMatch(req, res) {
     res.status(500).json({ message: 'Server error: ' + error.message })
   }
 }
+
+// Get all matches the logged-in player has joined 
+// GET /api/matches/my-matches
+
+export async function getMyMatches(req, res) {
+  try {
+
+    // Find all matches where this user appears in the players array
+    const matches = await Match.find({ 'players.user': req.user._id })
+      .populate('organizer', 'name email')
+      .sort({ date: 1 })
+
+    res.status(200).json({
+      message: 'Your matches fetched successfully',
+      matches
+    })
+
+  } catch (error) {
+    res.status(500).json({
+      message: 'Server error: ' + error.message
+    })
+  }
+}
