@@ -42,6 +42,14 @@ const matchSchema = new mongoose.Schema(
       required: true,
       trim: true
     },
+    
+    // Optional reference to a registered Venue document
+    // Only set if the organizer picked a registered venue instead of typing their own
+    venueId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Venue',
+      default: null
+    },
 
     address: {
       type: String,
