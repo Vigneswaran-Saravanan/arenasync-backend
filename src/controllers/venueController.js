@@ -41,7 +41,14 @@ export async function getVenueById(req, res) {
     }
 
     // Find upcoming matches booked at this venue
-    const bookings = await Match.find({ venue: venue.name, status: 'Upcoming' })
+    // Matches by venueId for accuracy, falls back to name match for older matches created before venueId existed
+    const bookings = await Match.find({
+      $or: [
+        { venueId: venue._id },
+        { venue: venue.name }
+      ],
+      status: 'Upcoming'
+    })
       .populate('organizer', 'name email')
       .sort({ date: 1 })
 
