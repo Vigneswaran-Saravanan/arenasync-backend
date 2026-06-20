@@ -1,6 +1,13 @@
 import Match from '../models/Match.js'
 // Tested: join, confirm player and leave match all working
 
+// Generates a random pin position within a safe visible range
+function generateRandomPin() {
+  const top = (Math.random() * 70 + 15).toFixed(1) + '%'
+  const left = (Math.random() * 70 + 15).toFixed(1) + '%'
+  return { top, left }
+}
+
 // GET All Matches
 // GET /api/matches
 
@@ -94,7 +101,7 @@ export async function createMatch(req, res) {
       skillLevel,
       maxPlayers,
       description: description || '',
-      pin: pin || { top: '50%', left: '50%' }
+      pin: pin || generateRandomPin()
     })
 
     // Populate organizer details before sending back
