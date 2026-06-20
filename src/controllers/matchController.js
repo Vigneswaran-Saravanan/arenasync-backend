@@ -64,6 +64,7 @@ export async function createMatch(req, res) {
     const {
       title,
       venue,
+      venueId,
       address,
       date,
       time,
@@ -86,6 +87,7 @@ export async function createMatch(req, res) {
       title,
       organizer: req.user._id,
       venue,
+      venueId: venueId || null,
       address,
       date,
       time,
