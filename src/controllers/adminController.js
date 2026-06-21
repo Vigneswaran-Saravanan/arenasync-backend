@@ -1,4 +1,5 @@
 import User from '../models/User.js'
+import Match from '../models/Match.js'
 
 // GET all users - admin only
 export async function getAllUsers(req, res) {
@@ -45,6 +46,56 @@ export async function deleteUser(req, res) {
     await user.deleteOne()
 
     res.json({ message: 'User deleted' })
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message })
+  }
+}
+
+
+// GET all matches - admin only
+export async function getAllMatches(req, res) {
+  try {
+    const matches = await Match.find()
+      .populate('organizer', 'name email')
+      .sort({ date: -1 })
+    res.json(matches)
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message })
+  }
+}
+
+// UPDATE a match's status - admin only
+export async function updateMatchStatus(req, res) {
+  try {
+    const { status } = req.body
+
+    const match = await Match.findById(req.params.id)
+
+    if (!match) {
+      return res.status(404).json({ message: 'Match not found' })
+    }
+
+    match.status = status
+    await match.save()
+
+    res.json(match)
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message })
+  }
+}
+
+// DELETE a match - admin only
+export async function deleteMatch(req, res) {
+  try {
+    const match = await Match.findById(req.params.id)
+
+    if (!match) {
+      return res.status(404).json({ message: 'Match not found' })
+    }
+
+    await match.deleteOne()
+
+    res.json({ message: 'Match deleted' })
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message })
   }
