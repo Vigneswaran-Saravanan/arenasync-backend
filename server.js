@@ -5,6 +5,7 @@ import connectDB from './src/config/db.js';
 import authRoutes from './src/routes/authRoutes.js';
 import matchRoutes from './src/routes/matchRoutes.js'
 import venueRoutes from './src/routes/venueRoutes.js'
+import adminRoutes from './src/routes/adminRoutes.js'
 
 // Load environment variables from .env file
 dotenv.config();
@@ -28,6 +29,7 @@ app.use(cors({
 app.use('/api/auth', authRoutes)
 app.use('/api/matches', matchRoutes)
 app.use('/api/venues', venueRoutes)
+app.use('/api/admin', adminRoutes)
 
 // A simple test route — visit http://localhost:5000 in browser
 app.get('/', (req, res) => {
