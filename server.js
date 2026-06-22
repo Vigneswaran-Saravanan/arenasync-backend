@@ -6,6 +6,7 @@ import authRoutes from './src/routes/authRoutes.js';
 import matchRoutes from './src/routes/matchRoutes.js'
 import venueRoutes from './src/routes/venueRoutes.js'
 import adminRoutes from './src/routes/adminRoutes.js'
+import notificationRoutes from './src/routes/notificationRoutes.js'
 
 // Load environment variables from .env file
 dotenv.config();
@@ -25,11 +26,11 @@ app.use(cors({
 }))
 
 // Routes — all auth routes start with /api/auth
-// So signup will be at /api/auth/register and login /api/auth/login
 app.use('/api/auth', authRoutes)
 app.use('/api/matches', matchRoutes)
 app.use('/api/venues', venueRoutes)
 app.use('/api/admin', adminRoutes)
+app.use('/api/notifications', notificationRoutes)
 
 // A simple test route — visit http://localhost:5000 in browser
 app.get('/', (req, res) => {
