@@ -1,5 +1,6 @@
 import Match from '../models/Match.js'
-// Tested: join, confirm player and leave match all working
+import Notification from '../models/Notification.js'
+
 
 // Generates a random pin position within a safe visible range
 function generateRandomPin() {
@@ -14,8 +15,6 @@ function generateRandomPin() {
 export async function getMatches(req, res) {
   try {
 
-    // Get all matches from database
-    // populate('organizer') replaces the organizer ID
     const matches = await Match.find({ status: 'Upcoming' })
       .populate('organizer', 'name email')
       .sort({ date: 1 })
@@ -89,7 +88,6 @@ export async function createMatch(req, res) {
     }
 
     // Create the match
-    // req.user is set by the protect middleware
     const match = await Match.create({
       title,
       organizer: req.user._id,
@@ -104,7 +102,6 @@ export async function createMatch(req, res) {
       pin: pin || generateRandomPin()
     })
 
-    // Populate organizer details before sending back
     await match.populate('organizer', 'name email')
 
     res.status(201).json({
@@ -133,7 +130,6 @@ export async function updateMatch(req, res) {
       })
     }
 
-    // Check if logged-in user is the organizer
     if (match.organizer.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         message: 'Only the organizer can edit this match'
@@ -192,13 +188,27 @@ export async function deleteMatch(req, res) {
       })
     }
 
-    // Check if logged-in user is organizer or admin
     const isOrganizer = match.organizer.toString() === req.user._id.toString()
     const isAdmin = req.user.role === 'Admin'
 
     if (!isOrganizer && !isAdmin) {
       return res.status(403).json({
         message: 'Not authorized to delete this match'
+      })
+    }
+
+    // Notify all confirmed players that the match has been cancelled
+    const confirmedPlayers = match.players.filter(function (p) {
+      return p.status === 'confirmed'
+    })
+
+    for (const player of confirmedPlayers) {
+      await Notification.create({
+        recipient: player.user,
+        type: 'match_cancelled',
+        message: match.title + ' has been cancelled',
+        matchId: match._id,
+        senderId: req.user._id
       })
     }
 
@@ -226,12 +236,10 @@ export async function joinMatch(req, res) {
       return res.status(404).json({ message: 'Match not found' })
     }
 
-    // Check if match is still open
     if (match.status !== 'Upcoming') {
       return res.status(400).json({ message: 'This match is no longer accepting requests' })
     }
 
-    // Check if the player already requested or confirmed
     const alreadyJoined = match.players.find(function (p) {
       return p.user.toString() === req.user._id.toString()
     })
@@ -249,13 +257,21 @@ export async function joinMatch(req, res) {
       return res.status(400).json({ message: 'This match is full' })
     }
 
-    // Add players with pending status
     match.players.push({
       user: req.user._id,
       status: 'pending'
     })
 
     await match.save()
+
+    // Notify the organizer that a player wants to join
+    await Notification.create({
+      recipient: match.organizer,
+      type: 'join_request',
+      message: req.user.name + ' wants to join ' + match.title,
+      matchId: match._id,
+      senderId: req.user._id
+    })
 
     res.status(200).json({
       message: 'Join request sent successfully',
@@ -280,12 +296,10 @@ export async function confirmPlayer(req, res) {
       return res.status(404).json({ message: 'Match not found' })
     }
 
-    // Check if logged in user is the organizer
     if (match.organizer.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Only the organizer can accept or decline players' })
     }
 
-    // Find the player in the players array
     const playerEntry = match.players.find(function (p) {
       return p.user.toString() === req.params.userId
     })
@@ -305,6 +319,17 @@ export async function confirmPlayer(req, res) {
     playerEntry.status = action
 
     await match.save()
+
+    // Notify the player whether they were accepted or declined
+    await Notification.create({
+      recipient: playerEntry.user,
+      type: action === 'confirmed' ? 'request_accepted' : 'request_declined',
+      message: action === 'confirmed'
+        ? 'Your request to join ' + match.title + ' was accepted'
+        : 'Your request to join ' + match.title + ' was declined',
+      matchId: match._id,
+      senderId: req.user._id
+    })
 
     res.status(200).json({
       message: 'Player ' + action + ' successfully',
@@ -329,7 +354,7 @@ export async function leaveMatch(req, res) {
     }
 
     // Check if player is in this match
-    const playerIndex = match.players.findIndex(function(p) {
+    const playerIndex = match.players.findIndex(function (p) {
       return p.user.toString() === req.user._id.toString()
     })
 
