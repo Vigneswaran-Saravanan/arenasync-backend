@@ -3,7 +3,8 @@ import { protect } from '../middleware/authmiddleware.js'
 import {
   getMyNotifications,
   markAllRead,
-  markOneRead
+  markOneRead,
+  deleteNotification
 } from '../controllers/notificationController.js'
 
 const router = express.Router()
@@ -11,5 +12,6 @@ const router = express.Router()
 router.get('/', protect, getMyNotifications)
 router.patch('/mark-all-read', protect, markAllRead)
 router.patch('/:id/read', protect, markOneRead)
+router.delete('/:id', protect, deleteNotification)
 
 export default router
