@@ -1,6 +1,8 @@
 import User from '../models/User.js'
 import Match from '../models/Match.js'
 import Venue from '../models/Venue.js'
+import Notification from '../models/Notification.js'
+
 
 // GET all users - admin only
 export async function getAllUsers(req, res) {
@@ -92,6 +94,21 @@ export async function deleteMatch(req, res) {
 
         if (!match) {
             return res.status(404).json({ message: 'Match not found' })
+        }
+
+        // Notify all confirmed players that the match has been cancelled by the admin
+        const confirmedPlayers = match.players.filter(function (p) {
+            return p.status === 'confirmed'
+        })
+
+        for (const player of confirmedPlayers) {
+            await Notification.create({
+                recipient: player.user,
+                type: 'match_cancelled',
+                message: match.title + ' has been cancelled by the admin',
+                matchId: match._id,
+                senderId: req.user._id
+            })
         }
 
         await match.deleteOne()
