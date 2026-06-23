@@ -9,7 +9,8 @@ import {
   confirmPlayer,
   leaveMatch,
   getMyMatches,
-  markAttendance
+  markAttendance,
+  getMyCreatedMatches
 
 } from '../controllers/matchController.js'
 import { protect, requireRole } from '../middleware/authmiddleware.js'
@@ -45,5 +46,8 @@ router.delete('/:id/leave', protect, requireRole('Player'), leaveMatch)
 
 // PATCH /api/matches/:id/attendance — organizer marks who attended
 router.patch('/:id/attendance', protect, requireRole('Organizer'), markAttendance)
+
+// GET /api/matches/my-created — get all matches the organizer created
+router.get('/my-created', protect, requireRole('Organizer'), getMyCreatedMatches)
 
 export default router
