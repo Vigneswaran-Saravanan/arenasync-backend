@@ -472,3 +472,24 @@ export async function markAttendance(req, res) {
     res.status(500).json({ message: 'Server error: ' + error.message })
   }
 }
+
+// GET all matches created by the logged-in organizer (all statuses)
+// GET /api/matches/my-created
+export async function getMyCreatedMatches(req, res) {
+  try {
+    const matches = await Match.find({ organizer: req.user._id })
+      .populate('organizer', 'name email')
+      .populate('players.user', 'name email')
+      .sort({ date: -1 })
+
+    res.status(200).json({
+      message: 'Your created matches fetched successfully',
+      matches
+    })
+
+  } catch (error) {
+    res.status(500).json({
+      message: 'Server error: ' + error.message
+    })
+  }
+}
