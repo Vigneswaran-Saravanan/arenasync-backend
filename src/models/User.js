@@ -57,6 +57,12 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ['Active', 'Suspended'],
       default:'Active'
+    },
+
+    // Attendance rate 
+    attendanceRate: {
+      type: Number,
+      default: 0
     }
   },
     { 
