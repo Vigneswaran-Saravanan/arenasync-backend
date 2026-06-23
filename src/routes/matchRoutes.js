@@ -23,6 +23,9 @@ router.get('/', getMatches)
 // GET /api/matches/my-matches — get all matches the logged-in player joined
 router.get('/my-matches', protect, getMyMatches)
 
+// GET /api/matches/my-created — get all matches the organizer created
+router.get('/my-created', protect, requireRole('Organizer'), getMyCreatedMatches)
+
 // GET /api/matches/:id — get one match 
 router.get('/:id', getMatchById)
 
@@ -46,8 +49,5 @@ router.delete('/:id/leave', protect, requireRole('Player'), leaveMatch)
 
 // PATCH /api/matches/:id/attendance — organizer marks who attended
 router.patch('/:id/attendance', protect, requireRole('Organizer'), markAttendance)
-
-// GET /api/matches/my-created — get all matches the organizer created
-router.get('/my-created', protect, requireRole('Organizer'), getMyCreatedMatches)
 
 export default router
