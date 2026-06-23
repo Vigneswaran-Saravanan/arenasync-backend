@@ -398,3 +398,77 @@ export async function getMyMatches(req, res) {
     })
   }
 }
+
+// Mark player attendance after a match is completed
+// PATCH /api/matches/:id/attendance
+
+export async function markAttendance(req, res) {
+  try {
+    const match = await Match.findById(req.params.id)
+
+    if (!match) {
+      return res.status(404).json({ message: 'Match not found' })
+    }
+
+    if (match.organizer.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Only the organizer can mark attendance' })
+    }
+
+    if (match.status !== 'Completed') {
+      return res.status(400).json({ message: 'Attendance can only be marked for completed matches' })
+    }
+
+    const { attendedPlayerIds } = req.body
+
+    if (!Array.isArray(attendedPlayerIds)) {
+      return res.status(400).json({ message: 'attendedPlayerIds must be an array' })
+    }
+
+    match.players.forEach(function (playerEntry) {
+      if (playerEntry.status === 'confirmed') {
+        playerEntry.attended = attendedPlayerIds.includes(playerEntry.user.toString())
+      }
+    })
+
+    await match.save()
+
+    const User = (await import('../models/User.js')).default
+
+    for (const playerEntry of match.players) {
+      if (playerEntry.status !== 'confirmed') continue
+
+      // Find all matches this player was confirmed in
+      const allMatches = await Match.find({
+        'players.user': playerEntry.user,
+        'players.status': 'confirmed',
+        status: 'Completed'
+      })
+
+      // Count how many they actually attended
+      let totalConfirmed = 0
+      let totalAttended = 0
+
+      for (const m of allMatches) {
+        const entry = m.players.find(function (p) {
+          return p.user.toString() === playerEntry.user.toString()
+        })
+        if (entry && entry.status === 'confirmed') {
+          totalConfirmed++
+          if (entry.attended) totalAttended++
+        }
+      }
+
+      // Calculate percentage and save to User document
+      const rate = totalConfirmed > 0
+        ? Math.round((totalAttended / totalConfirmed) * 100)
+        : 0
+
+      await User.findByIdAndUpdate(playerEntry.user, { attendanceRate: rate })
+    }
+
+    res.status(200).json({ message: 'Attendance marked successfully' })
+
+  } catch (error) {
+    res.status(500).json({ message: 'Server error: ' + error.message })
+  }
+}
