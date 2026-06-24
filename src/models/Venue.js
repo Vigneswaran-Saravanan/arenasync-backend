@@ -38,12 +38,6 @@ const venueSchema = new mongoose.Schema(
       max: 30
     },
 
-    // Optional photo URL
-    photoUrl: {
-      type: String,
-      default: ''
-    },
-
     // List of facilities — floodlights, parking, etc.
     facilities: {
       type: [String],
