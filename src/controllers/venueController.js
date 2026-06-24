@@ -76,7 +76,6 @@ export async function createVenue(req, res) {
       address,
       fieldType,
       capacity,
-      photoUrl,
       facilities
     } = req.body
 
@@ -95,7 +94,6 @@ export async function createVenue(req, res) {
       address,
       fieldType: fieldType || '',
       capacity,
-      photoUrl: photoUrl || '',
       facilities: facilities || []
     })
 
@@ -141,7 +139,6 @@ export async function updateVenue(req, res) {
       address,
       fieldType,
       capacity,
-      photoUrl,
       facilities
     } = req.body
 
@@ -149,7 +146,6 @@ export async function updateVenue(req, res) {
     if (address) venue.address = address
     if (fieldType) venue.fieldType = fieldType
     if (capacity) venue.capacity = capacity
-    if (photoUrl) venue.photoUrl = photoUrl
     if (facilities) venue.facilities = facilities
 
     // Save the updated venue
